@@ -62,6 +62,10 @@ The system dynamically tracks client balances, and ensures that purchases cannot
 3. **Finalize Purchases**: When the total coin amount is confirmed, the transaction is recorded in the client sheet and the client's balance is updated.
 4. **Client Purchase Records**: Each transaction will be recorded with a timestamp, client name, reward, coin cost, and the initials of the staff member who processed the transaction.
 
+### Google Sheets Template
+You can access the template here: [Google Sheet Template](https://docs.google.com/spreadsheets/d/1uK7HA4TsESonbKKUdK9-uoiIxYQqsX-XRyAalS6KsVU/edit?usp=sharing)
+I am not an artist.
+
 ## Contribution
 
 Feel free to fork this repository, make improvements, or submit issues or pull requests. Contributions are welcome!
