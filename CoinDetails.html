@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <h3>Enter Coin Details</h3>
+    
+    <!-- Display Client Name automatically fetched from B2 -->
+    <label for="clientName">Client Name:</label>
+    <input type="text" id="clientName" name="clientName" readonly><br><br>
+    
+    <label for="coinAmount">Coin Amount:</label>
+    <input type="number" id="coinAmount" name="coinAmount"><br><br>
+    
+    <label for="reason">Reason (optional):</label>
+    <input type="text" id="reason" name="reason"><br><br>
+    
+    <label for="initials">Your Initials:</label>
+    <input type="text" id="initials" name="initials"><br><br>
+    
+    <!-- Action buttons -->
+    <button onclick="commitData()">Commit</button>
+    <button onclick="cancelAction()">Cancel</button>
+
+    <script>
+      // Function to populate the client name and commit data
+      function setClientName(clientName) {
+        document.getElementById("clientName").value = clientName;
+      }
+
+      // Function to commit data
+      function commitData() {
+        var clientName = document.getElementById("clientName").value;
+        var coinAmount = document.getElementById("coinAmount").value;
+        var reason = document.getElementById("reason").value;
+        var initials = document.getElementById("initials").value;
+        
+        // Ensure valid input before running the commit
+        if (clientName && coinAmount && initials) {
+          google.script.run.commitCoinData(clientName, coinAmount, reason, initials, 'commit');
+          
+          // Close the dialog after 3 seconds
+          setTimeout(function() {
+            google.script.host.close();
+          }, 3000);
+        } else {
+          alert("Please fill in all required fields.");
+        }
+      }
+
+      // Function to cancel the action
+      function cancelAction() {
+        google.script.run.commitCoinData("", "", "", "", 'cancel');
+        
+        // Close the dialog
+        google.script.host.close();
+      }
+      
+      // Load the client name from the active sheet (cell B2)
+      window.onload = function() {
+        google.script.run.withSuccessHandler(setClientName).getClientNameFromSheet();
+      };
+    </script>
+  </body>
+</html>
