@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid black; padding: 8px; text-align: left; }
+    .total { font-weight: bold; }
+    .balance { margin-bottom: 20px; font-size: 18px; }
+  </style>
+  <script>
+    var rewardsData = [];
+    var clientBalance = 0;
+    var clientName = "";
+
+    function initialize() {
+      google.script.run.withSuccessHandler(function(data) {
+        rewardsData = data;
+        populateRewardsTable(data);
+      }).getRewardsData();
+
+      google.script.run.withSuccessHandler(function(data) {
+        clientBalance = data.balance;
+        clientName = data.clientName;
+        updateBalanceDisplay();
+      }).getClientBalance();
+    }
+
+    function updateBalanceDisplay() {
+      var total = parseInt(document.getElementById('grandTotal').innerText) || 0;
+      var newBalance = clientBalance - total;
+      document.getElementById('clientBalance').innerText = `Client: ${clientName} | Balance: ${clientBalance} Coins`;
+      document.getElementById('newBalance').innerText = `New Balance: ${newBalance} Coins`;
+    }
+
+    function populateRewardsTable(data) {
+      var tableBody = document.getElementById('rewardsTableBody');
+      data.forEach(function(row, index) {
+        var coinCost = row[1];
+        var usdCost = row[3];
+        var coinDisplay = row[4] === row[5] ? `${coinCost} Coins` : `${row[4]} - ${row[5]} Coins`;
+        var usdDisplay = row[6] === row[7] ? `$${usdCost}` : `$${row[6]} - $${row[7]}`;
+
+        var tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row[0]}</td>
+          <td>${coinDisplay}</td>
+          <td>${usdDisplay}</td>
+          <td><input type="number" id="quantity-${index}" min="0" value="0" onchange="calculateTotal(${index})"></td>
+          <td><input type="number" id="usd-${index}" min="0" step="0.01" onchange="convertUsdToCoins(${index})"></td>
+          <td><span id="total-${index}">0</span> Coins</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function convertUsdToCoins(index) {
+      var usdValue = parseFloat(document.getElementById(`usd-${index}`).value) || 0;
+      var coinValue = Math.ceil((usdValue + 0.001) / 2.5);
+      document.getElementById(`quantity-${index}`).value = coinValue;
+      calculateTotal(index);
+    }
+
+    function calculateTotal(index) {
+      var quantity = parseInt(document.getElementById(`quantity-${index}`).value) || 0;
+      var usdInput = parseFloat(document.getElementById(`usd-${index}`).value) || 0;
+      var coinCost = rewardsData[index][1];
+
+      var totalCoins = usdInput > 0 ? Math.ceil((usdInput + 0.001) / 2.5) : quantity * coinCost;
+      document.getElementById(`total-${index}`).innerText = totalCoins;
+
+      var grandTotal = Array.from(document.querySelectorAll('[id^=total-]'))
+        .reduce((sum, elem) => sum + parseInt(elem.innerText), 0);
+
+      document.getElementById('grandTotal').innerText = grandTotal + ' Coins';
+      updateBalanceDisplay();
+    }
+
+    function finalizePurchase() {
+      var staffInitials = document.getElementById('staffInitials').value;
+      if (!staffInitials) {
+        alert("Please enter staff initials.");
+        return;
+      }
+
+      var selectedRewards = [];
+      rewardsData.forEach(function(row, index) {
+        var quantity = parseInt(document.getElementById(`quantity-${index}`).value);
+        var usdInput = parseFloat(document.getElementById(`usd-${index}`).value) || 0;
+        var finalCoins = usdInput > 0 ? Math.ceil((usdInput + 0.001) / 2.5) : quantity * row[1];
+
+        if (finalCoins > 0) {
+          selectedRewards.push({ name: row[0], coins: finalCoins, quantity: finalCoins });
+        }
+      });
+
+      var grandTotal = parseInt(document.getElementById('grandTotal').innerText);
+
+      if (grandTotal > clientBalance) {
+        alert("Insufficient balance!");
+      } else {
+        google.script.run.processPurchase(clientName, selectedRewards, staffInitials);
+        alert("Purchase completed!");
+        google.script.host.close();
+      }
+    }
+  </script>
+</head>
+<body onload="initialize()">
+  <h2>Rewards Menu</h2>
+  <div class="balance" id="clientBalance">Loading...</div>
+  <div class="balance" id="newBalance"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Reward</th>
+        <th>Coin Cost</th>
+        <th>USD Cost</th>
+        <th>Quantity</th>
+        <th>USD Input</th>
+        <th>Total Cost</th>
+      </tr>
+    </thead>
+    <tbody id="rewardsTableBody"></tbody>
+  </table>
+  <div class="total">Total: <span id="grandTotal">0</span> Coins</div>
+  <input type="text" id="staffInitials" placeholder="Enter Staff Initials">
+  <button onclick="finalizePurchase()">Finalize Purchase</button>
+</body>
+</html>
