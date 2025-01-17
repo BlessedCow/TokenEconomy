@@ -64,7 +64,8 @@ The system dynamically tracks client balances, and ensures that purchases cannot
 
 ### Google Sheets Template
 You can access the template here: [Google Sheet Template](https://docs.google.com/spreadsheets/d/1uK7HA4TsESonbKKUdK9-uoiIxYQqsX-XRyAalS6KsVU/edit?usp=sharing)
-I am not an artist.
+
+  Warning: I am not an artist.
 
 ## Contribution
 
